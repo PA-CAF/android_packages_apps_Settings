@@ -41,7 +41,6 @@ import com.android.settings.search.Indexable;
 import com.android.settings.SettingsPreferenceFragment;
 import com.android.settings.Utils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,6 +56,8 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
     private static final int KEY_MASK_CAMERA = 0x20;
 
     private static final String KEY_NAVIGATION_BAR         = "navigation_bar";
+    private static final String KEY_SWAP_NAVIGATION_KEYS   = "swap_navigation_keys";
+    private static final String KEY_SWAP_SLIDER_ORDER      = "swap_slider_order";
     private static final String KEY_BUTTON_BRIGHTNESS      = "button_brightness";
 
     private static final String KEY_HOME_LONG_PRESS        = "home_key_long_press";
@@ -85,6 +86,8 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
 
     private int mDeviceHardwareKeys;
 
+    private boolean mHasAlertSlider = false;
+
     private ListPreference mHomeLongPressAction;
     private ListPreference mHomeDoubleTapAction;
     private ListPreference mBackLongPressAction;
@@ -99,6 +102,8 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
     private ListPreference mCameraDoubleTapAction;
 
     private SwitchPreference mNavigationBar;
+    private SwitchPreference mSwapNavigationkeys;
+    private SwitchPreference mSwapSliderOrder;
     private SwitchPreference mButtonBrightness;
 
     @Override
@@ -116,6 +121,10 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
         mDeviceHardwareKeys = res.getInteger(
                 com.android.internal.R.integer.config_deviceHardwareKeys);
 
+        mHasAlertSlider = res.getBoolean(com.android.internal.R.bool.config_hasAlertSlider)
+                && !TextUtils.isEmpty(res.getString(com.android.internal.R.string.alert_slider_state_path))
+                && !TextUtils.isEmpty(res.getString(com.android.internal.R.string.alert_slider_uevent_match_path));
+
         /* Navigation Bar */
         mNavigationBar = (SwitchPreference) findPreference(KEY_NAVIGATION_BAR);
         if (mNavigationBar != null) {
@@ -124,6 +133,23 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
             } else {
                 mNavigationBar = null;
                 removePreference(KEY_NAVIGATION_BAR);
+            }
+        }
+
+        /* Swap Navigation Keys */
+        mSwapNavigationkeys = (SwitchPreference) findPreference(KEY_SWAP_NAVIGATION_KEYS);
+        if (mSwapNavigationkeys != null) {
+            mSwapNavigationkeys.setOnPreferenceChangeListener(this);
+        }
+
+        /* Swap Slider order */
+        mSwapSliderOrder = (SwitchPreference) findPreference(KEY_SWAP_SLIDER_ORDER);
+        if (mSwapSliderOrder != null) {
+            if (mHasAlertSlider) {
+                mSwapSliderOrder.setOnPreferenceChangeListener(this);
+            } else {
+                mSwapSliderOrder = null;
+                removePreference(KEY_SWAP_SLIDER_ORDER);
             }
         }
 
@@ -317,6 +343,10 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
             return EMPTY_STRING;
         } else if (preference == mNavigationBar) {
             return Settings.System.NAVIGATION_BAR_ENABLED;
+        } else if (preference == mSwapNavigationkeys) {
+            return Settings.System.SWAP_NAVIGATION_KEYS;
+        } else if (preference == mSwapSliderOrder) {
+            return Settings.System.ALERT_SLIDER_ORDER;
         } else if (preference == mButtonBrightness) {
             return Settings.System.BUTTON_BRIGHTNESS_ENABLED;
         } else if (preference == mHomeLongPressAction) {
@@ -352,8 +382,9 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
         final ContentResolver resolver = getActivity().getContentResolver();
         final Resources res = getActivity().getResources();
 
+        final boolean showNavigationBar = res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
         final boolean navigationBarEnabled = Settings.System.getIntForUser(resolver,
-                Settings.System.NAVIGATION_BAR_ENABLED, 0, UserHandle.USER_CURRENT) != 0;
+                Settings.System.NAVIGATION_BAR_ENABLED, showNavigationBar ? 1 : 0, UserHandle.USER_CURRENT) != 0;
 
         final boolean hasHome = (mDeviceHardwareKeys & KEY_MASK_HOME) != 0 || navigationBarEnabled;
         final boolean hasMenu = (mDeviceHardwareKeys & KEY_MASK_MENU) != 0;
@@ -362,11 +393,28 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
         final boolean hasAppSwitch = (mDeviceHardwareKeys & KEY_MASK_APP_SWITCH) != 0 || navigationBarEnabled;
         final boolean hasCamera = (mDeviceHardwareKeys & KEY_MASK_CAMERA) != 0;
 
+        final boolean swapNavigationkeysEnabled = Settings.System.getIntForUser(resolver,
+                Settings.System.SWAP_NAVIGATION_KEYS, 0, UserHandle.USER_CURRENT) != 0;
+
+        final boolean swapSliderOrderEnabled = Settings.System.getIntForUser(resolver,
+                Settings.System.ALERT_SLIDER_ORDER, 0, UserHandle.USER_CURRENT) != 0;
+
         final boolean buttonBrightnessEnabled = Settings.System.getIntForUser(resolver,
                 Settings.System.BUTTON_BRIGHTNESS_ENABLED, 1, UserHandle.USER_CURRENT) != 0;
 
         if (mNavigationBar != null) {
             mNavigationBar.setChecked(navigationBarEnabled);
+        }
+
+        if (mSwapNavigationkeys != null) {
+            mSwapNavigationkeys.setChecked(swapNavigationkeysEnabled);
+            // Disable when navigation bar is disabled and no hw back and recents available.
+            mSwapNavigationkeys.setEnabled(navigationBarEnabled
+                    || hasBack && hasAppSwitch);
+        }
+
+        if (mSwapSliderOrder != null) {
+            mSwapSliderOrder.setChecked(swapSliderOrderEnabled);
         }
 
         if (mButtonBrightness != null) {
@@ -436,7 +484,6 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
     @Override
     public boolean onPreferenceTreeClick(Preference preference) {
         final boolean handled = handleOnPreferenceTreeClick(preference);
-        // return super.onPreferenceTreeClick(preferenceScreen, preference);
         return handled;
     }
 
@@ -455,12 +502,51 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
 
             @Override
             public List<String> getNonIndexableKeys(Context context) {
-                final ArrayList<String> result = new ArrayList<String>();
+                final List<String> keys = super.getNonIndexableKeys(context);
 
-                final UserManager um = (UserManager) context.getSystemService(Context.USER_SERVICE);
-                final int myUserId = UserHandle.myUserId();
-                final boolean isSecondaryUser = myUserId != UserHandle.USER_OWNER;
-                return result;
+                final int deviceHardwareKeys = Resources.getSystem().getInteger(
+                        com.android.internal.R.integer.config_deviceHardwareKeys);
+                final boolean hasAlertSlider = Resources.getSystem().getBoolean(com.android.internal.R.bool.config_hasAlertSlider)
+                    && !TextUtils.isEmpty(Resources.getSystem().getString(com.android.internal.R.string.alert_slider_state_path))
+                    && !TextUtils.isEmpty(Resources.getSystem().getString(com.android.internal.R.string.alert_slider_uevent_match_path));
+                final boolean hasMenu = (deviceHardwareKeys & KEY_MASK_MENU) != 0;
+                final boolean hasAssist = (deviceHardwareKeys & KEY_MASK_ASSIST) != 0;
+                final boolean hasCamera = (deviceHardwareKeys & KEY_MASK_CAMERA) != 0;
+                int defaultButtonBrightness = Resources.getSystem().getInteger(
+                        com.android.internal.R.integer.config_buttonBrightnessSettingDefault);
+
+                // Remove duplicates for "Long press action" and "Double tap action"
+                keys.add(KEY_BACK_LONG_PRESS);
+                keys.add(KEY_BACK_DOUBLE_TAP);
+                keys.add(KEY_MENU_LONG_PRESS);
+                keys.add(KEY_MENU_DOUBLE_TAP);
+                keys.add(KEY_ASSIST_LONG_PRESS);
+                keys.add(KEY_ASSIST_DOUBLE_TAP);
+                keys.add(KEY_APP_SWITCH_LONG_PRESS);
+                keys.add(KEY_APP_SWITCH_DOUBLE_TAP);
+                keys.add(KEY_CAMERA_LONG_PRESS);
+                keys.add(KEY_CAMERA_DOUBLE_TAP);
+
+                // Remove entries that do not exist on device
+                if (!hasAlertSlider)
+                    keys.add(KEY_SWAP_SLIDER_ORDER);
+
+                if (!hasMenu)
+                    keys.add(KEY_CATEGORY_MENU);
+
+                if (!hasAssist)
+                    keys.add(KEY_CATEGORY_ASSIST);
+
+                if (!hasCamera)
+                    keys.add(KEY_CATEGORY_CAMERA);
+
+                if (deviceHardwareKeys == 0)
+                    keys.add(KEY_NAVIGATION_BAR);
+
+                if (defaultButtonBrightness == 0)
+                    keys.add(KEY_BUTTON_BRIGHTNESS);
+
+                return keys;
             }
         };
 }
