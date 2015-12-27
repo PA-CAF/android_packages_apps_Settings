@@ -132,6 +132,7 @@ import com.android.settings.wifi.WifiAPITest;
 import com.android.settings.wifi.WifiInfo;
 import com.android.settings.wifi.WifiSettings;
 import com.android.settings.wifi.p2p.WifiP2pSettings;
+import com.android.settings.ButtonsSettings;
 
 public class SettingsGateway {
 
@@ -293,5 +294,6 @@ public class SettingsGateway {
             Settings.DateTimeSettingsActivity.class.getName(),
             Settings.DeviceInfoSettingsActivity.class.getName(),
             Settings.EnterprisePrivacySettingsActivity.class.getName(),
+            Settings.ButtonsSettingsActivity.class.getName(),
     };
 }
