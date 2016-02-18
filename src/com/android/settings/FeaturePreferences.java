@@ -32,9 +32,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
-import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
-
-import com.android.settings.core.InstrumentedFragment;
+import com.android.internal.logging.MetricsLogger;
 
 import java.util.ArrayList;
 
@@ -152,14 +150,8 @@ public class FeaturePreferences extends InstrumentedFragment {
     }
 
     @Override
-    public int getMetricsCategory() {
-        return MetricsEvent.FEATURE_PREFERENCES;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        updateActiveCustomPreferences();
+    protected int getMetricsCategory() {
+        return MetricsLogger.FEATURE_PREFERENCES;
     }
 
     private class SettingsListAdapter extends ArrayAdapter<CheckBoxPreference> {
