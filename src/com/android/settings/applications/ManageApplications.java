@@ -927,7 +927,7 @@ public class ManageApplications extends InstrumentedFragment
             if (mOverrideFilter != null) {
                 filterObj = mOverrideFilter;
             }
-            if (!mManageApplications.mShowSystem) {
+            if (!mManageApplications.mShowSystem && !mManageApplications.mShowSubstratum) {
                 filterObj = new CompoundFilter(filterObj,
                                                ApplicationsState.FILTER_DOWNLOADED_AND_LAUNCHER);
             }
