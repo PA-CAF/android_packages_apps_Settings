@@ -264,7 +264,32 @@ public abstract class PreviewSeekBarPreferenceFragment extends SettingsPreferenc
             }
         }
 
-        new PageViewLoader(content).execute();
+        final Context context = getContext();
+        final Configuration origConfig = context.getResources().getConfiguration();
+        final boolean isLayoutRtl = origConfig.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
+        Configuration[] configurations = new Configuration[mEntries.length];
+        for (int i = 0; i < mEntries.length; ++i) {
+            configurations[i] = createConfig(origConfig, i);
+        }
+
+        mPreviewPager = (ViewPager) content.findViewById(R.id.preview_pager);
+        mPreviewPagerAdapter = new PreviewPagerAdapter(context, isLayoutRtl,
+                mPreviewSampleResIds, configurations);
+        mPreviewPager.setAdapter(mPreviewPagerAdapter);
+        mPreviewPager.setCurrentItem(isLayoutRtl ? mPreviewSampleResIds.length - 1 : 0);
+        mPreviewPager.addOnPageChangeListener(mPreviewPageChangeListener);
+
+        mPageIndicator = (DotsPageIndicator) content.findViewById(R.id.page_indicator);
+        if (mPageIndicator != null) {
+            if (mPreviewSampleResIds.length > 1) {
+                mPageIndicator.setViewPager(mPreviewPager);
+                mPageIndicator.setVisibility(View.VISIBLE);
+                mPageIndicator.setOnPageChangeListener(mPageIndicatorPageChangeListener);
+            } else {
+                mPageIndicator.setVisibility(View.GONE);
+            }
+        }
+        setPreviewLayer(mInitialIndex, false);
         return root;
     }
 
