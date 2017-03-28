@@ -71,10 +71,12 @@
                 android:title="@string/firmware_version"
                 android:summary="@string/summary_placeholder"/>
 
-        <!-- Device PA version -->
-        <Preference android:key="pa_version"
-                android:title="@string/pa_version"
-                android:summary="@string/pa_version_default" />
+        <!-- AOSP-CAF Version  -->
+        <Preference android:key="caf_version"
+                android:enabled="false"
+                android:shouldDisableView="false"
+                android:title="@string/version_title"
+                android:summary="@string/version_default"/>
 
         <!-- Security patch level -->
         <Preference android:key="security_patch"
