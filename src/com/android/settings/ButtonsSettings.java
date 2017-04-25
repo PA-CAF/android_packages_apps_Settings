@@ -173,16 +173,6 @@ public class ButtonsSettings extends SettingsPreferenceFragment implements
             }
         }
 
-        /* Accidental navigation button interaction */
-        mAnbiPreference = (SwitchPreference) findPreference(KEY_ANBI);
-        if (mAnbiPreference != null) {
-            if (mDeviceHardwareKeys != 0) {
-                mAnbiPreference.setOnPreferenceChangeListener(this);
-            } else {
-                prefScreen.removePreference(mAnbiPreference);
-            }
-        }
-
         mPieFragment = findPreference(KEY_PIE_SETTINGS);
         if (mPieFragment != null) {
             mPieFragment.setOnPreferenceChangeListener(this);
