@@ -129,13 +129,12 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
         setStringSummary(KEY_DEVICE_MODEL, Build.MODEL);
         setStringSummary(KEY_BUILD_NUMBER, Build.DISPLAY);
         findPreference(KEY_BUILD_NUMBER).setEnabled(true);
+        //setValueSummary(KEY_QGP_VERSION, PROPERTY_QGP_VERSION);
+        // Remove QGP Version if property is not present
+        //removePreferenceIfPropertyMissing(getPreferenceScreen(), KEY_QGP_VERSION,
+        //        PROPERTY_QGP_VERSION);
         findPreference(KEY_KERNEL_VERSION).setSummary(DeviceInfoUtils.customizeFormatKernelVersion(
                 getResources().getBoolean(R.bool.def_hide_kernel_version_name)));
-        String mMbnVersion = getMBNVersionValue();
-        setStringSummary(KEY_MBN_VERSION, mMbnVersion);
-        if(TextUtils.isEmpty(mMbnVersion)){
-            getPreferenceScreen().removePreference(findPreference(KEY_MBN_VERSION));
-        }
         findPreference(KEY_KERNEL_VERSION).setSummary(DeviceInfoUtils.getFormattedKernelVersion());
         setValueSummary(KEY_MOD_BUILD_DATE, "ro.build.date");
 
