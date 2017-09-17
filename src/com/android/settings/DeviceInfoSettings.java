@@ -117,7 +117,8 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
         setValueSummary(KEY_CAF_VERSION, "ro.caf.version");
 
         final String patch = DeviceInfoUtils.getSecurityPatch();
-        if (!TextUtils.isEmpty(patch)) {
+        final boolean showPatch = getResources().getBoolean(R.bool.config_show_security_patch_level);
+        if (!TextUtils.isEmpty(patch) && showPatch) {
             setStringSummary(KEY_SECURITY_PATCH, patch);
         } else {
             getPreferenceScreen().removePreference(findPreference(KEY_SECURITY_PATCH));
