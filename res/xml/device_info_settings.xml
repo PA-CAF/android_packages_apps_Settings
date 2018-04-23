@@ -148,4 +148,9 @@
                 settings:allowDividerAbove="true"
                 settings:allowDividerBelow="true"/>
 
+        <PreferenceScreen
+                android:key="about_pa_caf"
+                android:fragment="com.android.settings.pacaf.PACAFAbout"
+                android:title="@string/pa_caf_menu_about" />
+
 </PreferenceScreen>

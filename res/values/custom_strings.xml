@@ -20,6 +20,13 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
+    <!-- About PA-CAF -->
+    <string name="pa_caf_menu_about">About PA-CAF</string>
+
+    <!-- AOSP-CAF Version -->
+    <string name="version_title">CAF Version</string>
+    <string name="version_default">Unknown</string>
+
     <!-- Bluetooth settings. A checkbox to set if we should accept all the file types regardless of their presence in MIME type whitelist -->
     <string name="bluetooth_accept_all_files">Accept all file types</string>
 
@@ -47,8 +54,4 @@
     <string name="hardware_keys_action_in_app_search">In-app search</string>
     <string name="hardware_keys_action_launch_camera">Open camera</string>
     <string name="hardware_keys_action_last_app">Launch last app</string>
-
-    <!-- AOSP-CAF Version -->
-    <string name="version_title">CAF Version</string>
-    <string name="version_default">Unknown</string>
 </resources>
