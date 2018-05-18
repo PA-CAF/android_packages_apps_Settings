@@ -714,27 +714,6 @@ public class SettingsActivity extends SettingsDrawerActivity
      */
     private Fragment switchToFragment(String fragmentName, Bundle args, boolean validate,
             boolean addToBackStack, int titleResId, CharSequence title, boolean withTransition) {
-
-        IExtTelephony extTelephony =
-                IExtTelephony.Stub.asInterface(ServiceManager.getService("extphone"));
-        try {
-            if (fragmentName.equals(SimSettings.class.getName()) && extTelephony != null &&
-                    extTelephony.isVendorApkAvailable("com.qualcomm.qti.simsettings")) {
-                Log.i(LOG_TAG, "switchToFragment, launch simSettings  ");
-                Intent provisioningIntent =
-                        new Intent("com.android.settings.sim.SIM_SUB_INFO_SETTINGS");
-                if (!getPackageManager().queryIntentActivities(provisioningIntent, 0).isEmpty()) {
-                    startActivity(provisioningIntent);
-                }
-                finish();
-                return null;
-            }
-        } catch (RemoteException e) {
-            // could not connect to extphone service, launch the default activity
-            Log.i(LOG_TAG,
-                    "couldn't connect to extphone service, launch the default sim cards activity");
-        }
-
         if (validate && !isValidFragment(fragmentName)) {
             throw new IllegalArgumentException("Invalid fragment for this activity: "
                     + fragmentName);
@@ -817,11 +796,6 @@ public class SettingsActivity extends SettingsDrawerActivity
                                 : Settings.DataUsageSummaryActivity.class.getName()),
                 Utils.isBandwidthControlEnabled() /* enabled */,
                 isAdmin) || somethingChanged;
-
-        somethingChanged = setTileEnabled(new ComponentName(packageName,
-                        Settings.SimSettingsActivity.class.getName()),
-                Utils.showSimCardTile(this), isAdmin)
-                || somethingChanged;
 
         somethingChanged = setTileEnabled(new ComponentName(packageName,
                         Settings.PowerUsageSummaryActivity.class.getName()),
